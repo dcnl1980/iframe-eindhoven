@@ -30,20 +30,22 @@ export default function Map() {
       
       try {
         // Get the parameters
-        const category = searchParams.get('category') || '';
-        const what = searchParams.get('what') || '';
-        const where = searchParams.get('where') || '';
+        const category = searchParams?.get('category') || '';
+        const what = searchParams?.get('what') || '';
+        const where = searchParams?.get('where') || '';
+        const customerToken = searchParams?.get('q') || '';
         
         // Use what or where as the search parameter
         const searchValue = what || where || '';
         
         // Log parameters to help debug
-        console.log('Fetching markers with:', { category, what, where, searchValue });
+        console.log('Fetching markers with:', { category, what, where, searchValue, customerToken });
         
         // Build URL with search parameters
         const queryParams = new URLSearchParams();
         if (category && category !== 'all') queryParams.set('category', category);
         if (searchValue) queryParams.set('search', searchValue);
+        if (customerToken) queryParams.set('q', customerToken);
         
         const url = `/api/markers?${queryParams.toString()}`;
         console.log('Fetching from URL:', url);

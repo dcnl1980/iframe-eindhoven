@@ -21,6 +21,10 @@ const categories = [
   { value: 'transportation', label: 'Transportation' },
   { value: 'education', label: 'Education' },
   { value: 'park', label: 'Parks' },
+  { value: 'office', label: 'Offices' },
+  { value: 'warehouse', label: 'Warehouses' },
+  { value: 'retail', label: 'Retail' },
+  { value: 'research', label: 'Research' },
 ];
 
 export default function FilterPanel() {
@@ -28,13 +32,13 @@ export default function FilterPanel() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
-  const [what, setWhat] = useState(searchParams.get('what') || '');
-  const [where, setWhere] = useState(searchParams.get('where') || '');
-  const [category, setCategory] = useState(searchParams.get('category') || 'all');
+  const [what, setWhat] = useState(searchParams?.get('what') || '');
+  const [where, setWhere] = useState(searchParams?.get('where') || '');
+  const [category, setCategory] = useState(searchParams?.get('category') || 'all');
   const totalLocations = 20;
   
   const createQueryString = (params: Record<string, string>) => {
-    const newParams = new URLSearchParams(searchParams.toString());
+    const newParams = new URLSearchParams(searchParams?.toString() || '');
     
     Object.entries(params).forEach(([name, value]) => {
       if (value) {
@@ -59,7 +63,14 @@ export default function FilterPanel() {
     setWhat('');
     setWhere('');
     setCategory('all');
-    router.push(pathname);
+    
+    // Add the customer token (q)
+    const customerToken = searchParams?.get('q') || '';
+    if (customerToken) {
+      router.push(`${pathname}?q=${customerToken}`);
+    } else {
+      router.push(pathname || '/');
+    }
   };
   
   return (

@@ -68,6 +68,63 @@ const eindhoven_markers: Marker[] = [
   },
 ];
 
+// Custom markers for customer one (abc)
+const customer_one_markers: Marker[] = [
+  {
+    id: 'c1-1',
+    name: 'Customer One Office',
+    category: 'office',
+    position: [51.4450, 5.4720],
+    description: 'Main office location in Eindhoven',
+  },
+  {
+    id: 'c1-2',
+    name: 'Customer One Warehouse',
+    category: 'warehouse',
+    position: [51.4270, 5.4650],
+    description: 'Primary storage and distribution center',
+  },
+  {
+    id: 'c1-3',
+    name: 'Customer One Retail Shop',
+    category: 'retail',
+    position: [51.4410, 5.4760],
+    description: 'Flagship retail location in city center',
+  },
+];
+
+// Custom markers for customer two (def)
+const customer_two_markers: Marker[] = [
+  {
+    id: 'c2-1',
+    name: 'Customer Two Headquarters',
+    category: 'office',
+    position: [51.4510, 5.4830],
+    description: 'Corporate headquarters with meeting facilities',
+  },
+  {
+    id: 'c2-2',
+    name: 'Customer Two R&D Center',
+    category: 'research',
+    position: [51.4380, 5.4920],
+    description: 'Research and development facility',
+  },
+  {
+    id: 'c2-3',
+    name: 'Customer Two Distribution',
+    category: 'warehouse',
+    position: [51.4190, 5.4730],
+    description: 'Logistics and distribution center',
+  },
+  {
+    id: 'c2-4',
+    name: 'Customer Two Training Center',
+    category: 'education',
+    position: [51.4460, 5.4680],
+    description: 'Employee training and development center',
+  },
+];
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   
@@ -76,11 +133,25 @@ export async function GET(request: Request) {
   
   const category = searchParams.get('category');
   const search = searchParams.get('search')?.toLowerCase().trim();
+  const customerToken = searchParams.get('q');
   
   // Log the processed search parameters
-  console.log('Processing search with:', { category, search });
+  console.log('Processing search with:', { category, search, customerToken });
   
-  let filteredMarkers = eindhoven_markers;
+  // Determine which markers to use based on customer token
+  let baseMarkers = eindhoven_markers;
+  
+  if (customerToken === 'abc') {
+    // Customer one
+    baseMarkers = [...eindhoven_markers, ...customer_one_markers];
+    console.log('Using Customer One markers');
+  } else if (customerToken === 'def') {
+    // Customer two
+    baseMarkers = [...eindhoven_markers, ...customer_two_markers];
+    console.log('Using Customer Two markers');
+  }
+  
+  let filteredMarkers = baseMarkers;
   
   if (category && category !== 'all') {
     console.log(`Filtering by category: ${category}`);
