@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eindhoven Map Explorer - Filter Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.5;
+            color: #1f2937;
+            background-color: #f3f4f6;
+            padding: 2rem;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .iframe-container {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            background: white;
+        }
+        
+        iframe {
+            width: 100%;
+            min-height: 400px;
+            border: none;
+        }
+        
+        .map-simulation {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .map-simulation h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        
+        .map-content {
+            border: 1px dashed #d1d5db;
+            border-radius: 4px;
+            padding: 1rem;
+            min-height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f9fafb;
+        }
+        
+        .received-data {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .received-data h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        
+        pre {
+            background-color: #f1f5f9;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Eindhoven Map Search Filter Demo</h1>
+        
+        <!-- Display area for received filter parameters -->
+        <div class="received-data" id="receivedData">
+            <h2>Received Filter Parameters</h2>
+            <pre id="receivedDataContent">No data received yet.</pre>
+        </div>
+        
+        <div class="iframe-container">
+            <iframe id="filterFrame" src="http://localhost:3002/map?embed=filter" title="Eindhoven Map Search Filter"></iframe>
+        </div>
+        
+        <div class="map-simulation">
+            <h2>Map Simulation (would update based on filters)</h2>
+            <div class="map-content" id="mapSimulation">
+                <p>Use the filter above to simulate map updates.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Track processed message timestamps to prevent loops
+        let lastMessageTimestamp = 0;
+        const messageCooldown = 200; // ms
+        let lastProcessedMessageData = null;
+        let iframeLoaded = false;
+        
+        // Mark when iframe is loaded
+        document.getElementById('filterFrame').addEventListener('load', function() {
+            iframeLoaded = true;
+            console.log('Filter iframe loaded successfully');
+        });
+        
+        // Listen for messages from the iframe
+        window.addEventListener('message', function(event) {
+            try {
+                // Skip processing messages that arrive too quickly after the previous one
+                const now = Date.now();
+                if (now - lastMessageTimestamp < messageCooldown) {
+                    console.log('Skipping message due to cooldown');
+                    return;
+                }
+                
+                // Log the received message for debugging
+                console.log('Raw message received:', event.data);
+                
+                // Check if the message is valid and has a source
+                if (!event.source) {
+                    console.log('Message received without source, skipping');
+                    return;
+                }
+                
+                // Check if the message has valid filter data
+                if (event.data && typeof event.data === 'object' && 
+                    (event.data.what !== undefined || event.data.where !== undefined || event.data.category !== undefined)) {
+                    
+                    // Skip if this is exactly the same data we just processed
+                    const messageDataString = JSON.stringify(event.data);
+                    if (lastProcessedMessageData === messageDataString) {
+                        console.log('Skipping duplicate message data');
+                        return;
+                    }
+                    
+                    console.log('Received filter parameters:', event.data);
+                    lastMessageTimestamp = now;
+                    lastProcessedMessageData = messageDataString;
+                    
+                    // Update the received data display
+                    document.getElementById('receivedDataContent').textContent = JSON.stringify(event.data, null, 2);
+                    
+                    // Update the map simulation content
+                    const mapSimulation = document.getElementById('mapSimulation');
+                    let mapContent = '<div style="text-align: center;">';
+                    
+                    if (event.data.what || event.data.where || (event.data.category && event.data.category !== 'all')) {
+                        mapContent += '<p><strong>Filtered Map Content</strong></p>';
+                        mapContent += '<ul style="list-style-type: none; padding: 0; text-align: left; margin: 1rem auto; max-width: 300px;">';
+                        
+                        if (event.data.what) {
+                            mapContent += `<li>🔍 Searching for: ${event.data.what}</li>`;
+                        }
+                        
+                        if (event.data.where) {
+                            mapContent += `<li>📍 Location: ${event.data.where}</li>`;
+                        }
+                        
+                        if (event.data.category && event.data.category !== 'all') {
+                            mapContent += `<li>🏷️ Category: ${event.data.category}</li>`;
+                        }
+                        
+                        mapContent += '</ul>';
+                    } else {
+                        mapContent += '<p>Showing all map points. Select filters to narrow results.</p>';
+                    }
+                    
+                    mapContent += '</div>';
+                    mapSimulation.innerHTML = mapContent;
+                } else {
+                    console.log('Received message with invalid or incomplete data format:', event.data);
+                }
+            } catch (error) {
+                console.error('Error processing message:', error);
+            }
+        });
+    </script>
+</body>
+</html> 

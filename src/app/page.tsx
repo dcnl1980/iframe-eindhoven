@@ -1,103 +1,94 @@
-import Image from "next/image";
+'use client';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import dynamic from 'next/dynamic';
+import FilterPanel from '@/components/FilterPanel';
+import { Suspense } from 'react';
+
+// Dynamically import the Map component to avoid SSR issues with Leaflet
+const MapWithNoSSR = dynamic(() => import('@/components/Map'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex justify-center items-center h-[650px]">
+      <div className="flex flex-col items-center">
+        <div className="h-8 w-8 border-4 border-t-black border-r-gray-200 border-b-gray-200 border-l-gray-200 rounded-full animate-spin"></div>
+        <p className="mt-2 text-gray-600">Loading map data...</p>
+      </div>
+    </div>
+  ),
+});
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
+  );
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+function HomeContent() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 md:p-12 bg-gray-50">
+      <div className="w-full max-w-6xl">
+        <h1 className="text-4xl font-bold mb-4 text-center">
+          Eindhoven Map Explorer
+        </h1>
+        <p className="text-xl text-gray-500 mb-8 text-center">
+          Interactive map with locations in Eindhoven
+        </p>
+        
+        <Card className="w-full rounded-3xl overflow-hidden shadow-md border-gray-100">
+          <CardHeader className="bg-white pb-0">
+            <CardTitle className="text-2xl">Eindhoven Map Explorer</CardTitle>
+            <p className="text-gray-500">
+              Interactive map with search functionality and location details
+            </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6">
+              <div className="md:col-span-4">
+                <FilterPanel />
+              </div>
+              
+              <div className="md:col-span-8">
+                <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+                  <MapWithNoSSR />
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 bg-white border-t border-gray-100 flex justify-between items-center">
+              <p className="text-sm text-gray-500">
+                Using OpenStreetMap and Next.js 14 with ShadCN UI
+              </p>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="rounded-full px-4">
+                    View Details
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl rounded-2xl">
+                  <div className="space-y-4 p-2">
+                    <h2 className="text-xl font-bold">Implementation Details</h2>
+                    <p className="text-gray-600">
+                      This application demonstrates a Next.js 14 map explorer.
+                    </p>
+                    <ul className="list-disc pl-6 space-y-2 text-gray-600">
+                      <li>OpenStreetMap integration using React-Leaflet</li>
+                      <li>Interactive markers for locations in Eindhoven</li>
+                      <li>API calls to fetch marker data from the backend</li>
+                      <li>Filtering capabilities by category and search term</li>
+                      <li>Responsive UI built with Shadcn UI components</li>
+                    </ul>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
   );
 }

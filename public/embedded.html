@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eindhoven Map Explorer - Embedded iFrame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.5;
+            color: #1f2937;
+            background-color: #f3f4f6;
+            padding: 2rem;
+        }
+        
+        header {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        p.subtitle {
+            font-size: 1.25rem;
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+        }
+        
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .iframe-container {
+            width: 100%;
+            height: 800px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            background: white;
+            position: relative;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .spinner {
+            height: 40px;
+            width: 40px;
+            margin-bottom: 1rem;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        footer {
+            max-width: 1200px;
+            margin: 2rem auto 0;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .footer-links a {
+            color: #4b5563;
+            text-decoration: none;
+            margin-left: 1.5rem;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .search-data {
+            max-width: 1200px;
+            margin: 1rem auto;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-data h3 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .search-data code {
+            background-color: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            display: block;
+            margin-top: 8px;
+            white-space: pre-wrap;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.875rem;
+            }
+            
+            p.subtitle {
+                font-size: 1rem;
+            }
+            
+            .iframe-container {
+                height: 600px;
+            }
+            
+            footer {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+            
+            .footer-links {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+            
+            .footer-links a {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Eindhoven Map Explorer</h1>
+        <p class="subtitle">Explore interesting locations in Eindhoven through our interactive map</p>
+    </header>
+    
+    <!-- Debug element to display search parameters -->
+    <div id="searchData" class="search-data" style="display: none;">
+        <h3>Received Search Parameters:</h3>
+        <div id="searchDataContent"></div>
+    </div>
+    
+    <main>
+        <div class="iframe-container">
+            <div class="loader" id="loader">
+                <div class="loader-content">
+                    <div class="spinner"></div>
+                    <p>Loading map application...</p>
+                </div>
+            </div>
+            <iframe id="mapFrame" src="http://10.10.0.210:3000/map" title="Eindhoven Map Explorer"></iframe>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="copyright">
+            &copy; 2025 Eindhoven Map Explorer. All rights reserved.
+        </div>
+        <div class="footer-links">
+            <a href="#">About</a>
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Contact</a>
+        </div>
+    </footer>
+    
+    <script>
+        // Track the current URL to avoid unnecessary reloads
+        let currentUrl = '/map';
+        let lastMessageTimestamp = 0;
+        const messageCooldown = 200; // ms
+        let iframeLoaded = false;
+        
+        // Hide loading spinner when iframe loads
+        document.getElementById('mapFrame').addEventListener('load', function() {
+            document.getElementById('loader').style.display = 'none';
+            iframeLoaded = true;
+            console.log('Iframe loaded successfully');
+        });
+        
+        // Listen for messages from the iframe
+        window.addEventListener('message', function(event) {
+            try {
+                // Skip processing messages that arrive too quickly after the previous one
+                const now = Date.now();
+                if (now - lastMessageTimestamp < messageCooldown) {
+                    console.log('Skipping message due to cooldown');
+                    return;
+                }
+                lastMessageTimestamp = now;
+                
+                // Check if the message is from our iframe (additional security check)
+                if (!event.source) {
+                    console.log('Message received without source, skipping');
+                    return;
+                }
+                
+                // Log the message for debugging
+                console.log('Received raw message:', event.data);
+                
+                // Check if the message contains valid filter data
+                if (event.data && typeof event.data === 'object' && 
+                    (event.data.what !== undefined || event.data.where !== undefined || event.data.category !== undefined)) {
+                    
+                    console.log('Received message from iframe:', event.data);
+                    
+                    // Show the search data element for debugging
+                    const searchData = document.getElementById('searchData');
+                    const searchDataContent = document.getElementById('searchDataContent');
+                    searchData.style.display = 'block';
+                    
+                    // Format the search parameters
+                    searchDataContent.innerHTML = `<code>${JSON.stringify(event.data, null, 2)}</code>`;
+                    
+                    // Only proceed with URL change for filter updates, not for initial data
+                    if (event.data.messageType !== 'initialData') {
+                        // Build the URL with search parameters
+                        const iframe = document.getElementById('mapFrame');
+                        const baseUrl = '/map';
+                        const params = new URLSearchParams();
+                        
+                        if (event.data.what) params.set('what', event.data.what);
+                        if (event.data.where) params.set('where', event.data.where);
+                        if (event.data.category && event.data.category !== 'all') params.set('category', event.data.category);
+                        
+                        const queryString = params.toString();
+                        const newUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+                        
+                        // Only update iframe src if the URL has changed and iframe is loaded
+                        if (newUrl !== currentUrl && iframeLoaded) {
+                            currentUrl = newUrl;
+                            console.log('Updating iframe URL to:', newUrl);
+                            iframe.src = newUrl;
+                        } else {
+                            console.log('URL unchanged or iframe not loaded, skipping iframe refresh');
+                        }
+                    } else {
+                        console.log('Received initial data, not refreshing iframe');
+                    }
+                } else {
+                    console.log('Received message but data format is invalid or incomplete:', event.data);
+                }
+            } catch (error) {
+                console.error('Error processing message:', error);
+            }
+        });
+    </script>
+</body>
+</html> 
