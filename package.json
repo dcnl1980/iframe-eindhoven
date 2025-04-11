@@ -1,13 +1,11 @@
 {
   "name": "iframe-safari",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "dev:embedded": "next dev -p 8001",
     "build": "next build",
     "start": "next start",
-    "start:embedded": "next start -p 8001",
     "lint": "next lint"
   },
   "dependencies": {
